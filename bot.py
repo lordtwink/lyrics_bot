@@ -9,23 +9,22 @@ from aiogram.utils.markdown import hbold
 from genius_scraper import GeniusScraper
 from config import TELEGRAM_BOT_TOKEN
 
-# Настройка логирования
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Инициализация бота и диспетчера
+
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()
 
-# Инициализация скрапера
+
 scraper = GeniusScraper()
 
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
-    """Обработчик команды /start"""
     welcome_message = """
 🎵 Добро пожаловать в Lyrics Bot!
 
@@ -43,7 +42,6 @@ async def cmd_start(message: Message):
 
 @dp.message(Command("help"))
 async def cmd_help(message: Message):
-    """Обработчик команды /help"""
     help_message = """
 📖 Справка по использованию бота
 
@@ -67,7 +65,7 @@ async def cmd_help(message: Message):
 
 @dp.message(F.text)
 async def search_lyrics(message: Message):
-    """Обработчик поиска текста песни"""
+
     query = message.text.strip()
     
     if not query:
@@ -89,15 +87,15 @@ async def search_lyrics(message: Message):
             await search_msg.edit_text("❌ Песня не найдена. Попробуйте изменить запрос.")
             return
         
-        # Формируем ответ
+
         title = result['title']
         lyrics = result['lyrics']
         url = result['url']
         
-        # Сохраняем оригинальное форматирование
+
         response_text = f"🎵 {hbold(title)}\n\n{lyrics}\n\n🔗 {url}"
         
-        # Ограничение Telegram
+
         max_length = 4000
         if len(response_text) > max_length:
             # Разбиваем на части
@@ -115,10 +113,10 @@ async def search_lyrics(message: Message):
             if current_part:
                 parts.append(current_part)
             
-            # Удаляем сообщение о поиске
+
             await search_msg.delete()
             
-            # Отправляем части
+
             for i, part in enumerate(parts):
                 if i == 0:
                     await message.answer(part, parse_mode=ParseMode.HTML)
@@ -139,20 +137,18 @@ async def search_lyrics(message: Message):
 
 @dp.errors()
 async def error_handler(update: types.Update, exception: Exception):
-    """Обработчик ошибок"""
     logger.error(f"Ошибка: {exception}")
     if update.message:
         await update.message.answer("❌ Произошла ошибка. Попробуйте позже.")
     return True
 
 async def main():
-    """Основная функция запуска бота"""
     if not TELEGRAM_BOT_TOKEN:
         print("❌ Ошибка: Не указан токен бота!")
         print("Создайте файл .env и добавьте TELEGRAM_BOT_TOKEN=your_token_here")
         return
     
-    # Запускаем бота
+
     print("🤖 Бот запущен...")
     await dp.start_polling(bot)
 
