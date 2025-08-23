@@ -4,7 +4,6 @@ import json
 from typing import Optional
 
 async def translate_text(text: str, target_lang: str = "ru", source_lang: str = "en") -> str:
-    """Асинхронно переводит текст с сохранением структуры"""
     if not text or len(text.strip()) == 0:
         return ""
     
