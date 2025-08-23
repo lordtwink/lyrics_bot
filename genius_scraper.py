@@ -20,21 +20,19 @@ class GeniusScraper:
         })
     
     def search_song(self, query):
-        """Поиск песни на Genius.com"""
         try:
             logger.info(f"Searching for: {query}")
             
-            # Пробуем поиск через API
             result, error = self._search_via_api(query)
             if result:
                 return result, error
             
-            # Если API не сработал, пробуем HTML поиск
+
             result, error = self._search_via_html(query)
             if result:
                 return result, error
             
-            # Пробуем прямой поиск для известных песен
+
             result, error = self._search_direct(query)
             if result:
                 return result, error
@@ -46,7 +44,7 @@ class GeniusScraper:
             return None, f"Ошибка при поиске: {str(e)}"
     
     def _search_via_api(self, query):
-        """Поиск через API Genius"""
+
         try:
             search_url = f"https://genius.com/api/search/multi?per_page=5&q={quote_plus(query)}"
             response = self.session.get(search_url, timeout=10)
@@ -67,7 +65,6 @@ class GeniusScraper:
             return None, None
     
     def _search_via_html(self, query):
-        """Поиск через HTML страницу"""
         try:
             search_url = f"https://genius.com/search?q={quote_plus(query)}"
             response = self.session.get(search_url, timeout=10)
@@ -75,17 +72,17 @@ class GeniusScraper:
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, 'html.parser')
                 
-                # Ищем ссылки на песни
+
                 song_links = []
                 
-                # Поиск в мини-карточках
+ 
                 mini_cards = soup.find_all('div', class_=re.compile(r'mini_card|song_card'))
                 for card in mini_cards:
                     link = card.find('a', href=re.compile(r'/songs/'))
                     if link and link.get('href'):
                         song_links.append(link['href'])
                 
-                # Поиск по всем ссылкам
+
                 all_links = soup.find_all('a', href=re.compile(r'/songs/'))
                 for link in all_links:
                     href = link.get('href')
@@ -103,7 +100,7 @@ class GeniusScraper:
             return None, None
     
     def _search_direct(self, query):
-        """Прямой поиск по известным песням"""
+
         query_lower = query.lower()
         
         # Русские песни
@@ -134,7 +131,6 @@ class GeniusScraper:
         return None, None
     
     def get_lyrics(self, song_url):
-        """Извлечение текста песни"""
         try:
             response = self.session.get(song_url, timeout=10)
             
@@ -168,8 +164,6 @@ class GeniusScraper:
             return None, f"Ошибка при извлечении текста: {str(e)}"
     
     def _extract_lyrics(self, soup):
-        """Извлечение текста различными способами"""
-        # Способ 1: современный формат
         lyrics_containers = soup.find_all('div', {'data-lyrics-container': 'true'})
         if lyrics_containers:
             texts = []
@@ -181,12 +175,11 @@ class GeniusScraper:
                 texts.append(text)
             return '\n'.join(texts)
         
-        # Способ 2: классический lyrics контейнер
         lyrics_div = soup.find('div', class_=re.compile(r'lyrics|Lyrics__Container'))
         if lyrics_div:
             return lyrics_div.get_text(separator='\n', strip=False)
         
-        # Способ 3: поиск по всем div с текстом
+
         for div in soup.find_all('div'):
             text = div.get_text(separator='\n', strip=False)
             if len(text) > 200 and any(word in text.lower() for word in 
